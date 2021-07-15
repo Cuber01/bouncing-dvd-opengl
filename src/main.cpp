@@ -3,6 +3,12 @@
 
 #include <iostream>
 
+struct fromInit
+{
+    unsigned int VAO;
+    unsigned int shaderProgram;
+};
+
 const char *vertexShaderSource =
     "#version 330 core\n"
     "layout (location = 0) in vec3 aPos;\n"
@@ -55,13 +61,14 @@ unsigned int compileShader(int shaderType, const char *shaderSource)
 
 }
 
-void initTriangle(unsigned int shaderProgram, unsigned int VAO)
+fromInit initTriangle()
 {
     // compile shaders
     unsigned int vertexShader = compileShader(GL_VERTEX_SHADER, vertexShaderSource);
     unsigned int fragmentShader = compileShader(GL_FRAGMENT_SHADER, fragmentShaderSource);
 
     // create shader program and link shaders
+    unsigned int shaderProgram;
     shaderProgram = glCreateProgram();
 
     glAttachShader(shaderProgram, vertexShader);
@@ -83,6 +90,7 @@ void initTriangle(unsigned int shaderProgram, unsigned int VAO)
     glEnableVertexAttribArray(0);
 
     // create vertex array object
+    unsigned int VAO;
     glGenVertexArrays(1, &VAO);
 
     // bind vao
@@ -95,6 +103,8 @@ void initTriangle(unsigned int shaderProgram, unsigned int VAO)
     // set vertex attributes
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
     glEnableVertexAttribArray(0);
+
+    return fromInit {VAO, shaderProgram};
 }
 
 
@@ -126,10 +136,10 @@ int main()
         return -1;
     }
 
-    unsigned int VAO;
-    unsigned int shaderProgram;
-    initTriangle(shaderProgram, VAO);
 
+    fromInit data = initTriangle();
+    unsigned int VAO = data.VAO;
+    unsigned int shaderProgram = data.shaderProgram;
     
     // render loop
     while (!glfwWindowShouldClose(window))
