@@ -30,6 +30,9 @@ char infoLog[512];
 const char* fragmentShaderPath = "./res/fragment_shader.fs";
 const char* vertexShaderPath = "./res/vertex_shader.vs";
 
+#define BUFFER_SIZE 2000;
+
+char sbuffer[BUFFER_SIZE];
 
 int _glfwInit()
 {
@@ -168,18 +171,17 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 int main()
 {
     int n;
-    char sbuffer[2000];
 
     _glfwInit();
     
     memset(sbuffer, 0, sizeof(sbuffer));
-    n = readFile(fragmentShaderPath,sbuffer, 2000);
+    n = readFile(fragmentShaderPath,sbuffer, BUFFER_SIZE );
     printFile( sbuffer,n);
     std::cout << std::endl << "--- Compile: ----------------------------------------------" << std::endl;    
     unsigned int fragmentShader = compileShader(GL_FRAGMENT_SHADER , sbuffer );
 
     memset(sbuffer, 0, sizeof(sbuffer));    
-    n = readFile(vertexShaderPath,sbuffer, 2000);
+    n = readFile(vertexShaderPath,sbuffer, BUFFER_SIZE );
     printFile( sbuffer,n);        
     std::cout << std::endl << "--- Compile: ----------------------------------------------" << std::endl;        
     unsigned int vertexShader  = compileShader(GL_VERTEX_SHADER , sbuffer );
