@@ -2,6 +2,7 @@
 #include <GLFW/glfw3.h>
 
 #include <iostream>
+#include <cstring>
 #include <fstream>
 using std::ifstream;
 
@@ -22,27 +23,12 @@ float vertices[] = {
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
-const char *vertexShaderSource ="#version 330 core\n"
-    "layout (location = 0) in vec3 aPos;\n"
-    "layout (location = 1) in vec3 aColor;\n"
-    "out vec3 ourColor;\n"
-    "void main()\n"
-    "{\n"
-    "   gl_Position = vec4(aPos, 1.0);\n"
-    "   ourColor = aColor;\n"
-    "}\0";
-
-const char *fragmentShaderSource = "#version 330 core\n"
-    "out vec4 FragColor;\n"
-    "in vec3 ourColor;\n"
-    "void main()\n"
-    "{\n"
-    "   FragColor = vec4(ourColor, 1.0f);\n"
-    "}\n\0";
-
 GLFWwindow* window;
 int success;
 char infoLog[512];
+
+const char* fragmentShaderPath = "./res/fragment_shader.fs";
+const char* vertexShaderPath = "./res/vertex_shader.vs";
 
 
 int _glfwInit()
@@ -69,6 +55,8 @@ int _glfwInit()
         std::cout << "Failed to initialize GLAD" << std::endl;
         return -1;
     }
+
+    return 0;
 
 }
 
@@ -114,16 +102,30 @@ unsigned int makeShaderProgram(unsigned int shaders[1])
     return shaderProgram;
 }
 
-// char readFile(char* path, unsigned int fileSize)
-// {
-//     char data[fileSize];
-//     ifstream file;
-//     file.open (path);
-//     file >> data;
-//     file.close();
+char data[2000];//todo: poprawic
 
-//     return data;
-// }
+int readFile( const char* fileName, char* buffer, unsigned int maxFileSize )
+{
+    unsigned int n;
+    ifstream ifs(fileName);
+    std::cout << std::endl << "Read FILE: " << fileName << std::endl;
+    // ifs.open(fileName);
+    ifs.read( buffer, maxFileSize );
+    n = ifs.gcount();
+    ifs.close();
+
+    return n;
+}
+
+void printFile( const char* data, unsigned int n ){
+    std::cout << std::endl << "--- Readed FILE Start: ----------------------------------------------" << std::endl;
+    for( int i=0; i< n; i++ ){
+        std::cout << data[i];
+    }
+    std::cout << std::endl << "--- Readed FILE End: ----------------------------------------------" << std::endl;    
+}
+
+
 
 unsigned int processVerticesData()
 {
@@ -147,54 +149,6 @@ unsigned int processVerticesData()
 
 
 
-int main()
-{
-
-    _glfwInit();
-    
-    unsigned int fragmentShader = compileShader(GL_FRAGMENT_SHADER, fragmentShaderSource); 
-    unsigned int vertexShader  = compileShader(GL_VERTEX_SHADER, vertexShaderSource);
-
-    unsigned int shaders[] = {fragmentShader, vertexShader};
-    unsigned int shaderProgram = makeShaderProgram(shaders);
-
-    unsigned int VAO = processVerticesData();
-
-
-    glUseProgram(shaderProgram);
-
-    // render loop
-    while (!glfwWindowShouldClose(window))
-    {
-        // input
-        // -----
-        processInput(window);
-
-        // render
-        // ------
-        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
-
-        // render the triangle
-        glBindVertexArray(VAO);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
-
-        // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
-        // -------------------------------------------------------------------------------
-        glfwSwapBuffers(window);
-        glfwPollEvents();
-    }
-
-    // optional: de-allocate all resources once they've outlived their purpose:
-    // glDeleteVertexArrays(1, &VAO);
-    // glDeleteBuffers(1, &VBO);
-    glDeleteProgram(shaderProgram);
-
-    // glfw: terminate, clearing all previously allocated GLFW resources.
-    glfwTerminate();
-    return 0;
-}
-
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
 void processInput(GLFWwindow *window)
 {
@@ -208,4 +162,61 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
     // make sure the viewport matches the new window dimensions; note that width and 
     // height will be significantly larger than specified on retina displays.
     glViewport(0, 0, width, height);
+}
+
+
+int main()
+{
+    int n;
+    char sbuffer[2000];
+
+    _glfwInit();
+    
+    memset(sbuffer, 0, sizeof(sbuffer));
+    n = readFile(fragmentShaderPath,sbuffer, 2000);
+    printFile( sbuffer,n);
+    std::cout << std::endl << "--- Compile: ----------------------------------------------" << std::endl;    
+    unsigned int fragmentShader = compileShader(GL_FRAGMENT_SHADER , sbuffer );
+
+    memset(sbuffer, 0, sizeof(sbuffer));    
+    n = readFile(vertexShaderPath,sbuffer, 2000);
+    printFile( sbuffer,n);        
+    std::cout << std::endl << "--- Compile: ----------------------------------------------" << std::endl;        
+    unsigned int vertexShader  = compileShader(GL_VERTEX_SHADER , sbuffer );
+
+    unsigned int shaders[] = {fragmentShader, vertexShader};
+    unsigned int shaderProgram = makeShaderProgram(shaders);
+
+    unsigned int VAO = processVerticesData();
+
+
+    glUseProgram(shaderProgram);
+
+    // render loop
+    while (!glfwWindowShouldClose(window))
+    {
+        // input
+        processInput(window);
+
+        // render
+        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        // render the triangle
+        glBindVertexArray(VAO);
+        glDrawArrays(GL_TRIANGLES, 0, 3);
+
+        // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
+        glfwSwapBuffers(window);
+        glfwPollEvents();
+    }
+
+    // optional: de-allocate all resources once they've outlived their purpose:
+    // glDeleteVertexArrays(1, &VAO);
+    // glDeleteBuffers(1, &VBO);
+    glDeleteProgram(shaderProgram);
+
+    // glfw: terminate, clearing all previously allocated GLFW resources.
+    glfwTerminate();
+    return 0;
 }
