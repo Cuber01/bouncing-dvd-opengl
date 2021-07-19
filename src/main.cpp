@@ -15,13 +15,14 @@
 #include "utils.cpp"
 #include "texture.cpp"
 
+
 // debug
 int success;
 char infoLog[512];
 
 // dvd
 
-void dvd_update();
+void dvd_update(unsigned int shaderProgram);
 
 float dvd_x = 0.0;
 float dvd_y = 0.0;
@@ -33,6 +34,16 @@ float dvd_speed = 0.007;
 
 float dvd_width = 0.7; // hard coded, change that
 float dvd_height = 0.46;
+
+float colors[4][4] = 
+{
+    {1.0f, 1.0f, 1.0f},
+    {1.0f, 0.0f, 0.0f},
+    {0.0f, 1.0f, 0.0f},
+    {0.0f, 0.0f, 1.0f}
+};
+
+unsigned int color_i = 0;
 
 // paths
 const char* fragmentShaderPath = "./res/shaders/fragment_shader.fs";
@@ -100,16 +111,17 @@ rvStruct processData()
 
     return rvStruct;
 }
+
 void Render(CGlfwHandler GlfwHandler, unsigned int VAO, unsigned int shaderProgram, glm::mat4 trans)
 {
     // input
     GlfwHandler.processInput(GlfwHandler.window);
 
     // update
-    dvd_update();
+    dvd_update(shaderProgram);
 
     // clear
-    glClearColor(0, 0, 0, 1);
+    glClearColor(0, 0, 0, 0);
     glClear(GL_COLOR_BUFFER_BIT);
 
     // trans
@@ -119,6 +131,7 @@ void Render(CGlfwHandler GlfwHandler, unsigned int VAO, unsigned int shaderProgr
     glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans)); 
     
     // render
+
     glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
@@ -153,7 +166,14 @@ unsigned int handleShaders()
 }
 
 
-void dvd_update()
+void changeColor(unsigned int shaderProgram)
+{
+    glUniform4f(glGetUniformLocation(shaderProgram, "ourColor2"), colors[color_i][0], colors[color_i][1], colors[color_i][2], 1.0f);
+    color_i++;
+    if (color_i >= 4) { color_i = 0; }
+}
+
+void dvd_update(unsigned int shaderProgram)
 {
 
     dvd_x += (dvd_speed*dvd_vel_x);
@@ -162,12 +182,15 @@ void dvd_update()
     if ( (dvd_x + dvd_width) > 1 || dvd_x < -1)
     {
         dvd_vel_x = -dvd_vel_x;
+        changeColor(shaderProgram);
     } else if ( (dvd_y) > 1 || (dvd_y - dvd_height) < -1)
     {
         dvd_vel_y = -dvd_vel_y;
+        changeColor(shaderProgram);
     }
 
 }
+
 
 int main()
 {
@@ -185,6 +208,7 @@ int main()
     rvStruct _data = processData();  
     unsigned int VAO = _data.data1;
     unsigned int EBO = _data.data2;
+
 
     glUseProgram(shaderProgram);
 
