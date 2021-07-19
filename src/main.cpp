@@ -7,6 +7,7 @@
 #include "shader.cpp"
 #include "glfw.cpp"
 #include "utils.cpp"
+#include "texture.cpp"
 
 #include "stb_image.h"
 
@@ -87,9 +88,6 @@ void Render(CGlfwHandler GlfwHandler, unsigned int VAO)
     
     // render the triangle
     glBindVertexArray(VAO);
-    
-    // glBindTexture(GL_TEXTURE_2D, texture);
-    glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
 
@@ -105,6 +103,8 @@ int main()
     CShaderHandler ShaderHandler;
     CGlfwHandler GlfwHandler;
     CUtils Utils;
+    CTextureHandler TextureHandler;
+    
 
     GlfwHandler._glfwInit();
 
@@ -130,39 +130,8 @@ int main()
 
 
     glUseProgram(shaderProgram);
-
-
-
-
-    // TODO here
-    // load texture
-    unsigned int texture;
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    int width, height, nrChannels;
-    unsigned char *data = stbi_load("./res/container.jpg", &width, &height, &nrChannels, 0);
-
-    if (data)
-    {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
-    }
-    else
-    {
-        std::cout << "Failed to load texture" << std::endl;
-    }
-    stbi_image_free(data);
-    //    load texture end
-
-    // TODO this causes segfault
-    // stbi_image_free(data);
-
+    
+    TextureHandler.textureLoad();
 
     while (!glfwWindowShouldClose(GlfwHandler.window))
     {
