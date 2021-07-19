@@ -115,18 +115,13 @@ void Render(CGlfwHandler GlfwHandler, unsigned int VAO, unsigned int shaderProgr
    
 }
 
-int main()
+unsigned int handleShaders()
 {
     int n;
 
     CShaderHandler ShaderHandler;
-    CGlfwHandler GlfwHandler;
     CUtils Utils;
-    CTextureHandler TextureHandler;
-    
 
-    GlfwHandler._glfwInit();
-    
     memset(sbuffer, 0, sizeof(sbuffer));
     n = Utils.readFile(fragmentShaderPath,sbuffer, BUFFER_SIZE );
 
@@ -140,6 +135,20 @@ int main()
 
     unsigned int shaders[] = {fragmentShader, vertexShader};
     unsigned int shaderProgram = ShaderHandler.makeShaderProgram(shaders);
+
+    return shaderProgram;
+}
+
+int main()
+{
+
+    CGlfwHandler GlfwHandler;
+    CTextureHandler TextureHandler;
+    
+
+    GlfwHandler._glfwInit();
+    
+    unsigned int shaderProgram = handleShaders();
 
     rvStruct _data = processData();  
     unsigned int VAO = _data.data1;
