@@ -15,19 +15,32 @@
 #include "utils.cpp"
 #include "texture.cpp"
 
+// debug
 int success;
 char infoLog[512];
 
-float dvd_x = 0.5f;
-float dvd_y = -0.5f;
+// dvd
 
+void dvd_update();
 
+float dvd_x = 0.0;
+float dvd_y = 0.0;
+
+int dvd_vel_x = 1;
+int dvd_vel_y = 1;
+
+float dvd_speed = 0.007;
+
+float dvd_width = 0.7; // hard coded, change that
+float dvd_height = 0.46;
+
+// paths
 const char* fragmentShaderPath = "./res/shaders/fragment_shader.fs";
 const char* vertexShaderPath = "./res/shaders/vertex_shader.vs";
     
-const char* containerTexturePath = "./res/images/container.jpg";
-const char* smileyTexturePath = "./res/images/smiley.png";
+const char* dvdTexturePath = "./res/images/dvd.png";
 
+// other
 #define BUFFER_SIZE 2000
 
 char sbuffer[BUFFER_SIZE];
@@ -37,17 +50,19 @@ struct rvStruct {
     unsigned int data2;
 };
 
-// set up vertex data (and buffer(s)) and configure vertex attributes
+
+// my aspect ratio: 2.13:1
 float vertices[] = {
 
-     // positions          // colors           // texture coords
-     0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f,   // top right
-     0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f,   // bottom right
-    -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f,   // bottom left
-    -0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f    // top left 
+     // positions             // colors           // texture coords
+     0.7f,   0.0f,  0.0f,     1.0f, 0.0f, 0.0f,   1.0f, 1.0f,   // top right
+     0.7f,  -0.46f, 0.0f,     0.0f, 1.0f, 0.0f,   1.0f, 0.0f,   // bottom right
+     0.0f,  -0.46f, 0.0f,     0.0f, 0.0f, 1.0f,   0.0f, 0.0f,   // bottom left
+     0.0f,   0.0f,  0.0f,     1.0f, 1.0f, 0.0f,   0.0f, 1.0f    // top left 
 
 };
 
+// choose from vertices (eg 0 = top right, 3 = bottom left)
 unsigned int indices[] = { 
     0, 1, 3,   // first triangle
     1, 2, 3    // second triangle
@@ -67,7 +82,6 @@ rvStruct processData()
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW); 
-
 
 
     // position attribute
@@ -91,16 +105,15 @@ void Render(CGlfwHandler GlfwHandler, unsigned int VAO, unsigned int shaderProgr
     // input
     GlfwHandler.processInput(GlfwHandler.window);
 
-    dvd_x += 0.01;
-    dvd_y += 0.01;
+    // update
+    dvd_update();
 
     // clear
-    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+    glClearColor(0, 0, 0, 1);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    //trans
+    // trans
     trans = glm::translate(trans, glm::vec3(dvd_x, dvd_y, 0.0f));
-   // trans = glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
 
     unsigned int transformLoc = glGetUniformLocation(shaderProgram, "transform");
     glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans)); 
@@ -139,26 +152,47 @@ unsigned int handleShaders()
     return shaderProgram;
 }
 
+
+void dvd_update()
+{
+
+    dvd_x += (dvd_speed*dvd_vel_x);
+    dvd_y += (dvd_speed*dvd_vel_y);
+
+    if ( (dvd_x + dvd_width) > 1 || dvd_x < -1)
+    {
+        dvd_vel_x = -dvd_vel_x;
+    } else if ( (dvd_y) > 1 || (dvd_y - dvd_height) < -1)
+    {
+        dvd_vel_y = -dvd_vel_y;
+    }
+
+}
+
 int main()
 {
 
+    // start -----------------------------------------
     CGlfwHandler GlfwHandler;
     CTextureHandler TextureHandler;
     
-
     GlfwHandler._glfwInit();
     
+    // handle shader related stuff --------------------------
+
     unsigned int shaderProgram = handleShaders();
 
     rvStruct _data = processData();  
     unsigned int VAO = _data.data1;
     unsigned int EBO = _data.data2;
 
-
     glUseProgram(shaderProgram);
 
-    TextureHandler.textureLoad(smileyTexturePath, GL_RGBA, false); 
+    // handle texture related stuff-------------------------
 
+    TextureHandler.textureLoad(dvdTexturePath, GL_RGBA, false); 
+
+    // render ----------------------------------------------
     glm::mat4 trans = glm::mat4(1.0f);
 
     while (!glfwWindowShouldClose(GlfwHandler.window))
@@ -166,7 +200,10 @@ int main()
         Render(GlfwHandler, VAO, shaderProgram, trans);
     }
 
-    // optional: de-allocate all resources once they've outlived their purpose:
+    // close------------------------------------------------
+
+ 
+    // deallocate stuffs
     glDeleteVertexArrays(1, &VAO);
     //glDeleteBuffers(1, &VBO);
     glDeleteProgram(shaderProgram);
