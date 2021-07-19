@@ -15,8 +15,11 @@
 int success;
 char infoLog[512];
 
-const char* fragmentShaderPath = "./res/fragment_shader.fs";
-const char* vertexShaderPath = "./res/vertex_shader.vs";
+const char* fragmentShaderPath = "./res/shaders/fragment_shader.fs";
+const char* vertexShaderPath = "./res/shaders/vertex_shader.vs";
+    
+const char* containerTexturePath = "./res/images/container.jpg";
+const char* smileyTexturePath = "./res/images/smiley.png";
 
 #define BUFFER_SIZE 2000
 
@@ -38,7 +41,7 @@ float vertices[] = {
 
 };
 
-unsigned int indices[] = {  // note that we start from 0!
+unsigned int indices[] = { 
     0, 1, 3,   // first triangle
     1, 2, 3    // second triangle
 };  
@@ -130,8 +133,10 @@ int main()
 
 
     glUseProgram(shaderProgram);
-    
-    TextureHandler.textureLoad();
+
+    TextureHandler.textureLoad(smileyTexturePath, GL_RGBA, false);    
+
+
 
     while (!glfwWindowShouldClose(GlfwHandler.window))
     {
@@ -139,8 +144,8 @@ int main()
     }
 
     // optional: de-allocate all resources once they've outlived their purpose:
-    // glDeleteVertexArrays(1, &VAO);
-    // glDeleteBuffers(1, &VBO);
+    glDeleteVertexArrays(1, &VAO);
+    //glDeleteBuffers(1, &VBO);
     glDeleteProgram(shaderProgram);
     
     
