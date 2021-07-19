@@ -31,27 +31,28 @@ class CShaderHandler {
     unsigned int makeShaderProgram(unsigned int shaders[1])
     {
 
-    unsigned int shaderProgram = glCreateProgram();
-    for (int i = 0; i < 2; i++)
-    {
-        glAttachShader(shaderProgram, shaders[i]);
-    }
+        unsigned int shaderProgram = glCreateProgram();
+        for (int i = 0; i < 2; i++)
+        {
+            glAttachShader(shaderProgram, shaders[i]);
+        }
+        
+        glLinkProgram(shaderProgram);
     
-    glLinkProgram(shaderProgram);
+        // check for linking errors
+        glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
+        if (!success) {
+            glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
+            std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
+        }
+        for (int i = 0; i < 2; i++)
+        {
+            glDeleteShader(shaders[i]);
+        }
+    
+        return shaderProgram;
 
-    // check for linking errors
-    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-    if (!success) {
-        glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
     }
-    for (int i = 0; i < 2; i++)
-    {
-        glDeleteShader(shaders[i]);
-    }
-
-    return shaderProgram;
-}
 
       
 };
