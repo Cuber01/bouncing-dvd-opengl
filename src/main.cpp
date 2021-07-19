@@ -1,6 +1,12 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
+#include <stb_image.h>
+
 #include <iostream>
 #include <cstring>
 
@@ -9,11 +15,12 @@
 #include "utils.cpp"
 #include "texture.cpp"
 
-#include "stb_image.h"
-
-
 int success;
 char infoLog[512];
+
+float dvd_x = 0.5f;
+float dvd_y = -0.5f;
+
 
 const char* fragmentShaderPath = "./res/shaders/fragment_shader.fs";
 const char* vertexShaderPath = "./res/shaders/vertex_shader.vs";
@@ -79,21 +86,30 @@ rvStruct processData()
 
     return rvStruct;
 }
-
-void Render(CGlfwHandler GlfwHandler, unsigned int VAO)
+void Render(CGlfwHandler GlfwHandler, unsigned int VAO, unsigned int shaderProgram, glm::mat4 trans)
 {
     // input
     GlfwHandler.processInput(GlfwHandler.window);
 
-    // render
+    dvd_x += 0.01;
+    dvd_y += 0.01;
+
+    // clear
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
+
+    //trans
+    trans = glm::translate(trans, glm::vec3(dvd_x, dvd_y, 0.0f));
+   // trans = glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
+
+    unsigned int transformLoc = glGetUniformLocation(shaderProgram, "transform");
+    glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans)); 
     
-    // render the triangle
+    // render
     glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
-
+    // swap buffers, process events
     glfwSwapBuffers(GlfwHandler.window);
     glfwPollEvents();
    
@@ -110,8 +126,6 @@ int main()
     
 
     GlfwHandler._glfwInit();
-
-   
     
     memset(sbuffer, 0, sizeof(sbuffer));
     n = Utils.readFile(fragmentShaderPath,sbuffer, BUFFER_SIZE );
@@ -134,13 +148,13 @@ int main()
 
     glUseProgram(shaderProgram);
 
-    TextureHandler.textureLoad(smileyTexturePath, GL_RGBA, false);    
+    TextureHandler.textureLoad(smileyTexturePath, GL_RGBA, false); 
 
-
+    glm::mat4 trans = glm::mat4(1.0f);
 
     while (!glfwWindowShouldClose(GlfwHandler.window))
     {
-        Render(GlfwHandler, VAO);
+        Render(GlfwHandler, VAO, shaderProgram, trans);
     }
 
     // optional: de-allocate all resources once they've outlived their purpose:
