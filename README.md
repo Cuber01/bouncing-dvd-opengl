@@ -12,5 +12,4 @@ glm: https://github.com/g-truc/glm
 
 stb_image.h: https://github.com/nothings/stb/blob/master/stb_image.h
 
-Great tutorial for opengl: learnopengl.com
-
+Great tutorial for opengl: https://learnopengl.com/
